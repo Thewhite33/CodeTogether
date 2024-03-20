@@ -4,6 +4,7 @@
   "version": "0.0.0",
   "type": "module",
   "scripts": {
+    "start": "react-scripts start",
     "server:dev": "nodemon server.js",
     "server:prod": "node server.js",
     "dev": "vite",

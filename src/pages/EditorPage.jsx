@@ -17,6 +17,7 @@ const EditorPage = () => {
     //Socket connection
     const reactNavigator = useNavigate();
     const socketRef = useRef(null)
+    const codeRef = useRef(null)
     const location = useLocation()
     const {roomId} = useParams()
     const [clients,setClients] = useState([])
@@ -35,17 +36,54 @@ const EditorPage = () => {
                         toast.success(`${username} joined the room`)
                     }
                     setClients(clients)
+                    socketRef.current.emit(ACTIONS.SYNC_CODE,{
+                        code:codeRef.current,
+                        socketId
+                    })
+                })
+                //Listening for disconnected
+                socketRef.current.on(ACTIONS.DISCONNECTED,({socketId,username})=>{
+                    toast.success(`${username} left the room`)
+                    setClients((prev) => {
+                        return prev.filter(client => client.socketId !== socketId)
+                    })
                 })
             } catch (error) {
                 console.error('Error initializing socket:', error);
             }
         }
         init();
+        return () => {
+            socketRef.current.disconnect()
+            socketRef.current.off(ACTIONS.JOINED)
+            socketRef.current.off(ACTIONS.DISCONNECTED)
+        }
     },[])
 
 
     if(!location.state){
         return <Navigate to='/' />
+    }
+    const copyRoomId = async() => {
+        try {
+            await navigator.clipboard.writeText(roomId);
+            toast.success('Room ID copied')
+        } catch (error) {
+            toast.error('Could not copy Room ID')
+            console.log(error);
+        }
+    }
+    const leaveBtn = () => {
+        reactNavigator('/')
+    }
+    const copyBtn = async() => {
+        try {
+            await navigator.clipboard.writeText(codeRef.current)
+            console.log(codeRef.current);
+            toast.success('CODE copied Successfully')
+        } catch (error) {
+            toast.error('Could not copy the CODE')
+        }
     }
   return (
     <div className="mainWrap h-[100vh]">
@@ -61,17 +99,22 @@ const EditorPage = () => {
                     }
                 </div>
             </div>
-            <button className="btn copyBtn font-bold bg-white text-black">Copy Room ID</button>
-            <button className="btn leaveBtn mt-5 font-bold bg-[#4aed88] text-black hover:bg-[#2b824c]">Leave</button>
+            <button
+            ref={codeRef}
+            onClick={copyBtn}
+            className="btn leaveBtn mb-5 font-bold bg-green-100 text-black">Copy Code</button>
+            <button
+            onClick={copyRoomId}
+            className="btn copyBtn font-bold bg-white text-black">Copy Room ID</button>
+            <button
+            onClick={leaveBtn}
+            className="btn leaveBtn mt-5 font-bold bg-[#4aed88] text-black hover:bg-[#2b824c]">Leave</button>
         </div>
         <div className="editorWrap bg-white">
-            <Editor/>
+            <Editor socketRef={socketRef} roomId={roomId} onCodeChange={(code)=>{codeRef.current = code}}/>
         </div>
     </div>
   )
 }
 
 export default EditorPage
-
-//2.38.00
-//https://www.youtube-nocookie.com/embed/jOv8jb6rCU0?playlist=jOv8jb6rCU0&autoplay=1&iv_load_policy=3&loop=1&start=
