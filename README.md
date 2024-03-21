@@ -32,9 +32,14 @@ Socket.io (for real-time communication)
 
 Installation
 1.Clone the repository:
+
 git clone https://github.com/Thewhite33/CodeTogether.git
 
-2. npm install
+npm install
 
-3.npm run dev
+npm run dev
+
+npm run server:dev
+
+Note: Server runs at port 5000
 
